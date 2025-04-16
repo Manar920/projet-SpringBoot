@@ -3,22 +3,20 @@ package tn.gestion.retour.services;
 import java.sql.Date;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import tn.gestion.retour.dto.RetourProduitDTO;
+import tn.gestion.retour.mappers.RetourProduitMapper;
 import tn.gestion.retour.models.RetourProduit;
 import tn.gestion.retour.repository.RetourProduitRepository;
 
 @Service
 public class RetourProduitService {
+    @Autowired
+    private RetourProduitRepository retourProduitRepository;
 
-    private final RetourProduitRepository retourProduitRepository;
-
-    public RetourProduitService(RetourProduitRepository retourProduitRepository) {
-        this.retourProduitRepository = retourProduitRepository;
-    }
-
-    // Enregistrer ou mettre à jour un retour
     public RetourProduit saveRetourProduit(RetourProduit retourProduit) {
         return retourProduitRepository.save(retourProduit);
     }
@@ -38,7 +36,7 @@ public class RetourProduitService {
 
     // Trouver un retour par ID
     public RetourProduit getRetourById(Long id) {
-        return retourProduitRepository.findById(id).orElseThrow(() ->
+        return retourProduitRepository.findById(id).orElseThrow(() -> 
             new IllegalArgumentException("Retour avec ID " + id + " non trouvé.")
         );
     }
@@ -71,7 +69,7 @@ public class RetourProduitService {
     // Modifier l'état d’un retour (ex: EN_ATTENTE → VALIDE)
     @Transactional
     public RetourProduit updateEtatRetour(Long id, String nouvelEtat) {
-        RetourProduit retour = retourProduitRepository.findById(id).orElseThrow(() ->
+        RetourProduit retour = retourProduitRepository.findById(id).orElseThrow(() -> 
             new IllegalArgumentException("Retour avec ID " + id + " non trouvé.")
         );
         retour.setEtatTraitement(nouvelEtat);

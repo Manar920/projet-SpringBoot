@@ -2,6 +2,7 @@ package tn.gestion.retour.services;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import tn.gestion.retour.models.Utilisateur;
@@ -10,16 +11,25 @@ import tn.gestion.retour.repository.UtilisateurRepository;
 @Service
 public class UtilisateurService {
 
-    private final UtilisateurRepository utilisateurRepository;
-
-    public UtilisateurService(UtilisateurRepository utilisateurRepository) {
-        this.utilisateurRepository = utilisateurRepository;
-    }
+    @Autowired
+    private UtilisateurRepository utilisateurRepository;
 
     // Enregistrer ou modifier un utilisateur
     public Utilisateur saveUtilisateur(Utilisateur utilisateur) {
-        if (utilisateurRepository.existsByEmail(utilisateur.getEmail())) {
-            throw new IllegalArgumentException("Email déjà utilisé.");
+        // Si nouvel utilisateur
+        if (utilisateur.getId() == null) {
+            if (utilisateurRepository.existsByEmail(utilisateur.getEmail())) {
+                throw new IllegalArgumentException("Email déjà utilisé.");
+            }
+        } else {
+            // Si modification, vérifier s'il existe et que l'email appartient bien à lui
+            Utilisateur existing = utilisateurRepository.findById(utilisateur.getId()).orElseThrow(() ->
+                new IllegalArgumentException("Utilisateur avec ID " + utilisateur.getId() + " non trouvé.")
+            );
+            if (!existing.getEmail().equals(utilisateur.getEmail()) &&
+                utilisateurRepository.existsByEmail(utilisateur.getEmail())) {
+                throw new IllegalArgumentException("Email déjà utilisé par un autre utilisateur.");
+            }
         }
         return utilisateurRepository.save(utilisateur);
     }

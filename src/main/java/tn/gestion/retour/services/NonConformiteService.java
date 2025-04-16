@@ -2,24 +2,27 @@ package tn.gestion.retour.services;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import tn.gestion.retour.dto.NonConformiteDTO;
+import tn.gestion.retour.mappers.NonConformiteMapper;
 import tn.gestion.retour.models.NonConformite;
 import tn.gestion.retour.repository.NonConformiteRepository;
 
 @Service
 public class NonConformiteService {
 
-    private final NonConformiteRepository nonConformiteRepository;
-
-    public NonConformiteService(NonConformiteRepository nonConformiteRepository) {
-        this.nonConformiteRepository = nonConformiteRepository;
-    }
+    @Autowired
+    private NonConformiteRepository nonConformiteRepository;
 
     // Enregistrer ou modifier une non-conformité
-    public NonConformite saveNonConformite(NonConformite nonConformite) {
-        return nonConformiteRepository.save(nonConformite);
+    public NonConformiteDTO saveNonConformite(NonConformiteDTO nonConformiteDTO) {
+        NonConformite nonConformite = NonConformiteMapper.toEntity(nonConformiteDTO);
+        NonConformite savedNonConformite = nonConformiteRepository.save(nonConformite);
+        return NonConformiteMapper.toDTO(savedNonConformite);
     }
 
     // Supprimer une non-conformité par ID
@@ -31,35 +34,49 @@ public class NonConformiteService {
     }
 
     // Récupérer toutes les non-conformités
-    public List<NonConformite> getAllNonConformites() {
-        return nonConformiteRepository.findAll();
+    public List<NonConformiteDTO> getAllNonConformites() {
+        List<NonConformite> nonConformites = nonConformiteRepository.findAll();
+        return nonConformites.stream()
+                .map(NonConformiteMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     // Récupérer une non-conformité par ID
-    public NonConformite getNonConformiteById(Long id) {
+    public NonConformiteDTO getNonConformiteById(Long id) {
         Optional<NonConformite> nc = nonConformiteRepository.findById(id);
-        return nc.orElseThrow(() -> 
-            new IllegalArgumentException("NonConformité avec ID " + id + " non trouvée.")
-        );
+        return nc.map(NonConformiteMapper::toDTO)
+                .orElseThrow(() -> new IllegalArgumentException("NonConformité avec ID " + id + " non trouvée."));
     }
 
     // Récupérer les non-conformités par gravité
-    public List<NonConformite> getNonConformitesByGravite(String gravite) {
-        return nonConformiteRepository.findByGravite(gravite);
+    public List<NonConformiteDTO> getNonConformitesByGravite(String gravite) {
+        List<NonConformite> nonConformites = nonConformiteRepository.findByGravite(gravite);
+        return nonConformites.stream()
+                .map(NonConformiteMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     // Récupérer les non-conformités d'un produit spécifique
-    public List<NonConformite> getNonConformitesByProduitId(Long produitId) {
-        return nonConformiteRepository.findByProduitId(produitId);
+    public List<NonConformiteDTO> getNonConformitesByProduitId(Long produitId) {
+        List<NonConformite> nonConformites = nonConformiteRepository.findByProduitId(produitId);
+        return nonConformites.stream()
+                .map(NonConformiteMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     // Récupérer les non-conformités liées à des retours
-    public List<NonConformite> getLinkedToRetours() {
-        return nonConformiteRepository.findLinkedToRetours();
+    public List<NonConformiteDTO> getLinkedToRetours() {
+        List<NonConformite> nonConformites = nonConformiteRepository.findLinkedToRetours();
+        return nonConformites.stream()
+                .map(NonConformiteMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     // Récupérer les non-conformités non liées à des retours
-    public List<NonConformite> getNotLinkedToRetours() {
-        return nonConformiteRepository.findNotLinkedToRetours();
+    public List<NonConformiteDTO> getNotLinkedToRetours() {
+        List<NonConformite> nonConformites = nonConformiteRepository.findNotLinkedToRetours();
+        return nonConformites.stream()
+                .map(NonConformiteMapper::toDTO)
+                .collect(Collectors.toList());
     }
 }

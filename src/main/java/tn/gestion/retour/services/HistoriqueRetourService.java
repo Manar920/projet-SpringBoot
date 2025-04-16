@@ -3,24 +3,30 @@ package tn.gestion.retour.services;
 import java.sql.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import tn.gestion.retour.dto.HistoriqueRetourDTO;
+import tn.gestion.retour.mappers.HistoriqueRetourMapper;
 import tn.gestion.retour.models.HistoriqueRetour;
 import tn.gestion.retour.repository.HistoriqueRetourRepository;
 
 @Service
 public class HistoriqueRetourService {
 
-    private final HistoriqueRetourRepository historiqueRetourRepository;
+    @Autowired
+    private HistoriqueRetourRepository historiqueRetourRepository;
 
-    public HistoriqueRetourService(HistoriqueRetourRepository historiqueRetourRepository) {
-        this.historiqueRetourRepository = historiqueRetourRepository;
-    }
+    @Autowired
+    private HistoriqueRetourMapper historiqueRetourMapper;
 
     // Ajouter ou mettre à jour un historique
-    public HistoriqueRetour saveHistorique(HistoriqueRetour historiqueRetour) {
-        return historiqueRetourRepository.save(historiqueRetour);
+    public HistoriqueRetourDTO saveHistorique(HistoriqueRetourDTO dto) {
+        HistoriqueRetour entity = historiqueRetourMapper.toEntity(dto);
+        HistoriqueRetour saved = historiqueRetourRepository.save(entity);
+        return historiqueRetourMapper.toDTO(saved);
     }
 
     // Supprimer un historique par ID
@@ -32,40 +38,57 @@ public class HistoriqueRetourService {
     }
 
     // Récupérer tous les historiques
-    public List<HistoriqueRetour> getAllHistoriques() {
-        return historiqueRetourRepository.findAll();
+    public List<HistoriqueRetourDTO> getAllHistoriques() {
+        return historiqueRetourRepository.findAll()
+                .stream()
+                .map(historiqueRetourMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     // Récupérer un historique par ID
-    public HistoriqueRetour getHistoriqueById(Long id) {
+    public HistoriqueRetourDTO getHistoriqueById(Long id) {
         Optional<HistoriqueRetour> historique = historiqueRetourRepository.findById(id);
-        return historique.orElseThrow(() -> 
-            new IllegalArgumentException("Historique avec ID " + id + " non trouvé.")
-        );
+        return historique.map(historiqueRetourMapper::toDTO)
+                .orElseThrow(() -> new IllegalArgumentException("Historique avec ID " + id + " non trouvé."));
     }
 
     // Récupérer l'historique d'un retour spécifique
-    public List<HistoriqueRetour> getHistoriquesByRetourId(Long retourId) {
-        return historiqueRetourRepository.findByRetourId(retourId);
+    public List<HistoriqueRetourDTO> getHistoriquesByRetourId(Long retourId) {
+        return historiqueRetourRepository.findByRetourId(retourId)
+                .stream()
+                .map(historiqueRetourMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     // Récupérer l'historique d'un employé spécifique
-    public List<HistoriqueRetour> getHistoriquesByEmployeId(Long employeId) {
-        return historiqueRetourRepository.findByEmployeId(employeId);
+    public List<HistoriqueRetourDTO> getHistoriquesByEmployeId(Long employeId) {
+        return historiqueRetourRepository.findByEmployeId(employeId)
+                .stream()
+                .map(historiqueRetourMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     // Récupérer l'historique par type d'action
-    public List<HistoriqueRetour> getHistoriquesByAction(String action) {
-        return historiqueRetourRepository.findByAction(action);
+    public List<HistoriqueRetourDTO> getHistoriquesByAction(String action) {
+        return historiqueRetourRepository.findByAction(action)
+                .stream()
+                .map(historiqueRetourMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     // Récupérer les historiques entre deux dates
-    public List<HistoriqueRetour> getHistoriquesBetweenDates(Date startDate, Date endDate) {
-        return historiqueRetourRepository.findByDateBetween(startDate, endDate);
+    public List<HistoriqueRetourDTO> getHistoriquesBetweenDates(Date startDate, Date endDate) {
+        return historiqueRetourRepository.findByDateBetween(startDate, endDate)
+                .stream()
+                .map(historiqueRetourMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     // Récupérer les 10 dernières actions
-    public List<HistoriqueRetour> getRecentActions() {
-        return historiqueRetourRepository.findRecentActions();
+    public List<HistoriqueRetourDTO> getRecentActions() {
+        return historiqueRetourRepository.findRecentActions()
+                .stream()
+                .map(historiqueRetourMapper::toDTO)
+                .collect(Collectors.toList());
     }
 }

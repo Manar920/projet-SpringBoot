@@ -3,18 +3,13 @@ package tn.gestion.retour.controllers;
 import java.sql.Date;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import tn.gestion.retour.dto.RetourProduitDTO;
+import tn.gestion.retour.mappers.RetourProduitMapper;
 import tn.gestion.retour.models.RetourProduit;
 import tn.gestion.retour.services.RetourProduitService;
 
@@ -22,24 +17,24 @@ import tn.gestion.retour.services.RetourProduitService;
 @RequestMapping("/api/retours")
 public class RetourProduitController {
 
-    private final RetourProduitService retourProduitService;
-
-    public RetourProduitController(RetourProduitService retourProduitService) {
-        this.retourProduitService = retourProduitService;
-    }
+    @Autowired
+    private RetourProduitService retourProduitService;
 
     // Récupérer tous les retours
     @GetMapping
-    public ResponseEntity<List<RetourProduit>> getAllRetours() {
-        List<RetourProduit> retours = retourProduitService.getAllRetours();
+    public ResponseEntity<List<RetourProduitDTO>> getAllRetours() {
+        List<RetourProduitDTO> retours = retourProduitService.getAllRetours()
+                                                          .stream()
+                                                          .map(RetourProduitMapper::toDTO)
+                                                          .toList();
         return ResponseEntity.ok(retours);
     }
 
     // Récupérer un retour par ID
     @GetMapping("/{id}")
-    public ResponseEntity<RetourProduit> getRetourById(@PathVariable Long id) {
+    public ResponseEntity<RetourProduitDTO> getRetourById(@PathVariable Long id) {
         try {
-            RetourProduit retour = retourProduitService.getRetourById(id);
+            RetourProduitDTO retour = RetourProduitMapper.toDTO(retourProduitService.getRetourById(id));
             return ResponseEntity.ok(retour);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -48,29 +43,41 @@ public class RetourProduitController {
 
     // Récupérer les retours par état de traitement
     @GetMapping("/etat/{etatTraitement}")
-    public ResponseEntity<List<RetourProduit>> getRetoursByEtat(@PathVariable String etatTraitement) {
-        List<RetourProduit> retours = retourProduitService.getRetoursByEtat(etatTraitement);
+    public ResponseEntity<List<RetourProduitDTO>> getRetoursByEtat(@PathVariable String etatTraitement) {
+        List<RetourProduitDTO> retours = retourProduitService.getRetoursByEtat(etatTraitement)
+                                                          .stream()
+                                                          .map(RetourProduitMapper::toDTO)
+                                                          .toList();
         return ResponseEntity.ok(retours);
     }
 
     // Récupérer les retours d’un client spécifique
     @GetMapping("/client/{clientId}")
-    public ResponseEntity<List<RetourProduit>> getRetoursByClientId(@PathVariable Long clientId) {
-        List<RetourProduit> retours = retourProduitService.getRetoursByClientId(clientId);
+    public ResponseEntity<List<RetourProduitDTO>> getRetoursByClientId(@PathVariable Long clientId) {
+        List<RetourProduitDTO> retours = retourProduitService.getRetoursByClientId(clientId)
+                                                          .stream()
+                                                          .map(RetourProduitMapper::toDTO)
+                                                          .toList();
         return ResponseEntity.ok(retours);
     }
 
     // Récupérer les retours ayant une non-conformité
     @GetMapping("/non-conformite")
-    public ResponseEntity<List<RetourProduit>> getRetoursWithNonConformite() {
-        List<RetourProduit> retours = retourProduitService.getRetoursWithNonConformite();
+    public ResponseEntity<List<RetourProduitDTO>> getRetoursWithNonConformite() {
+        List<RetourProduitDTO> retours = retourProduitService.getRetoursWithNonConformite()
+                                                          .stream()
+                                                          .map(RetourProduitMapper::toDTO)
+                                                          .toList();
         return ResponseEntity.ok(retours);
     }
 
     // Récupérer les retours entre deux dates
     @GetMapping("/dates")
-    public ResponseEntity<List<RetourProduit>> getRetoursBetweenDates(@RequestParam Date startDate, @RequestParam Date endDate) {
-        List<RetourProduit> retours = retourProduitService.getRetoursBetweenDates(startDate, endDate);
+    public ResponseEntity<List<RetourProduitDTO>> getRetoursBetweenDates(@RequestParam Date startDate, @RequestParam Date endDate) {
+        List<RetourProduitDTO> retours = retourProduitService.getRetoursBetweenDates(startDate, endDate)
+                                                          .stream()
+                                                          .map(RetourProduitMapper::toDTO)
+                                                          .toList();
         return ResponseEntity.ok(retours);
     }
 
@@ -83,17 +90,18 @@ public class RetourProduitController {
 
     // Ajouter ou modifier un retour
     @PostMapping
-    public ResponseEntity<RetourProduit> saveRetourProduit(@RequestBody RetourProduit retourProduit) {
-        RetourProduit savedRetour = retourProduitService.saveRetourProduit(retourProduit);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedRetour);
+    public ResponseEntity<RetourProduitDTO> saveRetourProduit(@RequestBody RetourProduitDTO retourProduitDTO) {
+        RetourProduit savedRetour = retourProduitService.saveRetourProduit(RetourProduitMapper.toEntity(retourProduitDTO));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                             .body(RetourProduitMapper.toDTO(savedRetour));
     }
 
     // Modifier l'état d’un retour
     @PutMapping("/{id}/etat")
-    public ResponseEntity<RetourProduit> updateEtatRetour(@PathVariable Long id, @RequestParam String nouvelEtat) {
+    public ResponseEntity<RetourProduitDTO> updateEtatRetour(@PathVariable Long id, @RequestParam String nouvelEtat) {
         try {
             RetourProduit updatedRetour = retourProduitService.updateEtatRetour(id, nouvelEtat);
-            return ResponseEntity.ok(updatedRetour);
+            return ResponseEntity.ok(RetourProduitMapper.toDTO(updatedRetour));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }

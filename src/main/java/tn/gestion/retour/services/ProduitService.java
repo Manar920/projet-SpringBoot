@@ -2,25 +2,31 @@ package tn.gestion.retour.services;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import tn.gestion.retour.dto.ProduitDTO;
+import tn.gestion.retour.mappers.ProduitMapper;
 import tn.gestion.retour.models.Produit;
 import tn.gestion.retour.repository.ProduitRepository;
 
 @Service
 public class ProduitService {
 
-    private final ProduitRepository produitRepository;
+    @Autowired
+    private ProduitRepository produitRepository;
 
-    public ProduitService(ProduitRepository produitRepository) {
-        this.produitRepository = produitRepository;
-    }
+    @Autowired
+    private ProduitMapper produitMapper;
 
     // Enregistrer ou modifier un produit
-    public Produit saveProduit(Produit produit) {
-        return produitRepository.save(produit);
+    public ProduitDTO saveProduit(ProduitDTO produitDTO) {
+        Produit produit = produitMapper.toEntity(produitDTO);
+        Produit savedProduit = produitRepository.save(produit);
+        return produitMapper.toDTO(savedProduit);
     }
 
     // Supprimer un produit par ID
@@ -32,26 +38,34 @@ public class ProduitService {
     }
 
     // Récupérer tous les produits
-    public List<Produit> getAllProduits() {
-        return produitRepository.findAll();
+    public List<ProduitDTO> getAllProduits() {
+        return produitRepository.findAll()
+                .stream()
+                .map(produitMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     // Récupérer un produit par ID
-    public Produit getProduitById(Long id) {
-        Optional<Produit> produit = produitRepository.findById(id);
-        return produit.orElseThrow(() ->
-            new IllegalArgumentException("Produit avec ID " + id + " non trouvé.")
-        );
+    public ProduitDTO getProduitById(Long id) {
+        Produit produit = produitRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Produit avec ID " + id + " non trouvé."));
+        return produitMapper.toDTO(produit);
     }
 
     // Récupérer un ou plusieurs produits par référence
-    public List<Produit> getProduitsByReference(String reference) {
-        return produitRepository.findByReference(reference);
+    public List<ProduitDTO> getProduitsByReference(String reference) {
+        return produitRepository.findByReference(reference)
+                .stream()
+                .map(produitMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     // Récupérer les produits avec stock faible
-    public List<Produit> getLowStockProducts(int seuil) {
-        return produitRepository.findLowStockProducts(seuil);
+    public List<ProduitDTO> getLowStockProducts(int seuil) {
+        return produitRepository.findLowStockProducts(seuil)
+                .stream()
+                .map(produitMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     // Mettre à jour le stock d'un produit (+ / -)
@@ -69,7 +83,10 @@ public class ProduitService {
     }
 
     // Produits ayant des non-conformités
-    public List<Produit> getProductsWithNonConformites() {
-        return produitRepository.findProductsWithNonConformites();
+    public List<ProduitDTO> getProductsWithNonConformites() {
+        return produitRepository.findProductsWithNonConformites()
+                .stream()
+                .map(produitMapper::toDTO)
+                .collect(Collectors.toList());
     }
 }

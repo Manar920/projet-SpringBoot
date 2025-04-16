@@ -1,17 +1,15 @@
 package tn.gestion.retour.controllers;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import tn.gestion.retour.dto.UtilisateurDTO;
+import tn.gestion.retour.mappers.UtilisateurMapper;
 import tn.gestion.retour.models.Utilisateur;
 import tn.gestion.retour.services.UtilisateurService;
 
@@ -19,25 +17,24 @@ import tn.gestion.retour.services.UtilisateurService;
 @RequestMapping("/api/utilisateurs")
 public class UtilisateurController {
 
-    private final UtilisateurService utilisateurService;
-
-    public UtilisateurController(UtilisateurService utilisateurService) {
-        this.utilisateurService = utilisateurService;
-    }
+    @Autowired
+    private UtilisateurService utilisateurService;
 
     // Récupérer tous les utilisateurs
     @GetMapping
-    public ResponseEntity<List<Utilisateur>> getAllUtilisateurs() {
-        List<Utilisateur> utilisateurs = utilisateurService.getAllUtilisateurs();
-        return ResponseEntity.ok(utilisateurs);
+    public ResponseEntity<List<UtilisateurDTO>> getAllUtilisateurs() {
+        List<UtilisateurDTO> utilisateursDTO = utilisateurService.getAllUtilisateurs().stream()
+            .map(UtilisateurMapper::toDTO)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(utilisateursDTO);
     }
 
     // Récupérer un utilisateur par ID
     @GetMapping("/{id}")
-    public ResponseEntity<Utilisateur> getUtilisateurById(@PathVariable Long id) {
+    public ResponseEntity<UtilisateurDTO> getUtilisateurById(@PathVariable Long id) {
         try {
             Utilisateur utilisateur = utilisateurService.getUtilisateurById(id);
-            return ResponseEntity.ok(utilisateur);
+            return ResponseEntity.ok(UtilisateurMapper.toDTO(utilisateur));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
@@ -45,10 +42,10 @@ public class UtilisateurController {
 
     // Récupérer un utilisateur par email
     @GetMapping("/email/{email}")
-    public ResponseEntity<Utilisateur> getUtilisateurByEmail(@PathVariable String email) {
+    public ResponseEntity<UtilisateurDTO> getUtilisateurByEmail(@PathVariable String email) {
         try {
             Utilisateur utilisateur = utilisateurService.getUtilisateurByEmail(email);
-            return ResponseEntity.ok(utilisateur);
+            return ResponseEntity.ok(UtilisateurMapper.toDTO(utilisateur));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
@@ -56,31 +53,38 @@ public class UtilisateurController {
 
     // Récupérer les utilisateurs par rôle
     @GetMapping("/role/{role}")
-    public ResponseEntity<List<Utilisateur>> getUtilisateursByRole(@PathVariable String role) {
-        List<Utilisateur> utilisateurs = utilisateurService.getUtilisateursByRole(role);
-        return ResponseEntity.ok(utilisateurs);
+    public ResponseEntity<List<UtilisateurDTO>> getUtilisateursByRole(@PathVariable String role) {
+        List<UtilisateurDTO> utilisateursDTO = utilisateurService.getUtilisateursByRole(role).stream()
+            .map(UtilisateurMapper::toDTO)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(utilisateursDTO);
     }
 
     // Récupérer les membres du service qualité
     @GetMapping("/qualite")
-    public ResponseEntity<List<Utilisateur>> getQualityTeam() {
-        List<Utilisateur> qualityTeam = utilisateurService.getQualityTeam();
-        return ResponseEntity.ok(qualityTeam);
+    public ResponseEntity<List<UtilisateurDTO>> getQualityTeam() {
+        List<UtilisateurDTO> qualityTeamDTO = utilisateurService.getQualityTeam().stream()
+            .map(UtilisateurMapper::toDTO)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(qualityTeamDTO);
     }
 
     // Récupérer les employés ayant effectué des actions sur les retours
     @GetMapping("/actifs")
-    public ResponseEntity<List<Utilisateur>> getActiveEmployees() {
-        List<Utilisateur> activeEmployees = utilisateurService.getActiveEmployees();
-        return ResponseEntity.ok(activeEmployees);
+    public ResponseEntity<List<UtilisateurDTO>> getActiveEmployees() {
+        List<UtilisateurDTO> activeEmployeesDTO = utilisateurService.getActiveEmployees().stream()
+            .map(UtilisateurMapper::toDTO)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(activeEmployeesDTO);
     }
 
     // Ajouter ou modifier un utilisateur
     @PostMapping
-    public ResponseEntity<Utilisateur> saveUtilisateur(@RequestBody Utilisateur utilisateur) {
+    public ResponseEntity<UtilisateurDTO> saveUtilisateur(@RequestBody UtilisateurDTO utilisateurDTO) {
         try {
+            Utilisateur utilisateur = UtilisateurMapper.toEntity(utilisateurDTO);
             Utilisateur savedUtilisateur = utilisateurService.saveUtilisateur(utilisateur);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedUtilisateur);
+            return ResponseEntity.status(HttpStatus.CREATED).body(UtilisateurMapper.toDTO(savedUtilisateur));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
